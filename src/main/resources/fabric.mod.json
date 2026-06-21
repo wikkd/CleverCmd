@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "agent-cli",
+  "version": "${version}",
+  "name": "Agent CLI",
+  "description": "Fabric 1.21.1 mod scaffold.",
+  "authors": ["FrostStarInquire"],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/agent-cli/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.example.agentcli.AgentCliMod"
+    ]
+  },
+  "mixins": [],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
+
