@@ -11,6 +11,9 @@
   "entrypoints": {
     "main": [
       "com.example.agentcli.AgentCliMod"
+    ],
+    "modmenu": [
+      "com.example.agentcli.client.AgentCliModMenuIntegration"
     ]
   },
   "mixins": [],
@@ -18,6 +21,10 @@
     "fabricloader": ">=0.16.0",
     "minecraft": "~1.21.1",
     "java": ">=21",
-    "fabric-api": "*"
+    "fabric-api": "*",
+    "cloth-config": ">=15.0.130"
+  },
+  "suggests": {
+    "modmenu": "*"
   }
 }

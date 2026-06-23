@@ -7,4 +7,3 @@ public enum SessionStatus {
 	CANCELLED,
 	FAILED
 }
-

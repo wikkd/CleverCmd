@@ -4,6 +4,6 @@ public enum RiskLevel {
 	READ_ONLY,
 	LOW,
 	MEDIUM,
-	HIGH
+	HIGH,
+	CRITICAL
 }
-

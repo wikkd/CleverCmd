@@ -19,14 +19,19 @@ import net.minecraft.nbt.NbtSizeTracker;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.WorldSavePath;
 
+/**
+ * 每玩家最多 20 条执行历史的持久化层,文件位于 {@code <world>/agentcli_state.dat}。
+ *
+ * <p>提供 {@link #findLastUndoable(UUID)} 用于 {@code /agent undo};按从新到旧扫描,
+ * 跳过不可逆的记录直到找到可撤销的一条。线程安全由调用方(命令 dispatcher 串行)保证,
+ * 内部状态无显式锁。</p>
+ */
 public final class AgentPersistentStore {
-	private final Map<UUID, AgentSession> pendingSessions = new HashMap<>();
 	private final Map<UUID, Deque<ExecutionRecord>> histories = new HashMap<>();
 	private Path file;
 
 	public void load(MinecraftServer server) {
 		file = server.getSavePath(WorldSavePath.ROOT).resolve("agentcli_state.dat");
-		pendingSessions.clear();
 		histories.clear();
 		if (!Files.exists(file)) {
 			return;
@@ -35,13 +40,6 @@ public final class AgentPersistentStore {
 			NbtCompound root = NbtIo.readCompressed(file, NbtSizeTracker.ofUnlimitedBytes());
 			if (root == null) {
 				return;
-			}
-			if (root.contains("pending", NbtElement.LIST_TYPE)) {
-				NbtList pending = root.getList("pending", NbtElement.COMPOUND_TYPE);
-				for (int i = 0; i < pending.size(); i++) {
-					AgentSession session = AgentSession.fromNbt(pending.getCompound(i));
-					pendingSessions.put(session.playerUuid(), session);
-				}
 			}
 			if (root.contains("history", NbtElement.LIST_TYPE)) {
 				NbtList history = root.getList("history", NbtElement.COMPOUND_TYPE);
@@ -62,11 +60,6 @@ public final class AgentPersistentStore {
 		try {
 			Files.createDirectories(file.getParent());
 			NbtCompound root = new NbtCompound();
-			NbtList pending = new NbtList();
-			for (AgentSession session : pendingSessions.values()) {
-				pending.add(session.toNbt());
-			}
-			root.put("pending", pending);
 			NbtList history = new NbtList();
 			for (Deque<ExecutionRecord> queue : histories.values()) {
 				for (ExecutionRecord record : queue) {
@@ -78,18 +71,6 @@ public final class AgentPersistentStore {
 		} catch (IOException e) {
 			throw new RuntimeException("无法保存 Agent 状态", e);
 		}
-	}
-
-	public Optional<AgentSession> getPending(UUID playerUuid) {
-		return Optional.ofNullable(pendingSessions.get(playerUuid));
-	}
-
-	public void putPending(AgentSession session) {
-		pendingSessions.put(session.playerUuid(), session);
-	}
-
-	public void clearPending(UUID playerUuid) {
-		pendingSessions.remove(playerUuid);
 	}
 
 	public void appendHistory(ExecutionRecord record) {
